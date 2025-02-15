@@ -1,0 +1,31 @@
+{
+  "name": "multiplayer-tic-tac-toe",
+  "version": "1.0.0",
+  "description": "multiplayer tic-tac-toe game using websockets",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "server": "nodemon index.js",
+    "start":"node ./index.js"
+  },
+  "keywords": [
+    "tic-tac-toe",
+    "multiplayer",
+    "tic-tac-toe",
+    "play",
+    "tic-tac-toe",
+    "with",
+    "a",
+    "friend",
+    "online"
+  ],
+  "author": "Eshita Das",
+  "license": "ISC",
+  "dependencies": {
+    "dotenv": "^16.4.5",
+    "express": "^4.21.1",
+    "http": "^0.0.1-security",
+    "nodemon": "^3.1.4",
+    "socket.io": "^4.8.1"
+  }
+}

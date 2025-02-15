@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <!-- font awesome link -->
+    <script
+      src="https://kit.fontawesome.com/a508d8e351.js"
+      crossorigin="anonymous"
+    ></script>
+
+    <!-- Socket.io -->
+    <script src="/socket.io/socket.io.js"></script>
+
+    <!-- Poppins font -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap"
+      rel="stylesheet"
+    />
+
+    <!-- stylesheet -->
+    <link rel="stylesheet" href="./style.css" />
+    <title>Play tic-tac-toe with people online</title>
+  </head>
+  <body>
+    <h1>TIC-TAC-TOE</h1>
+    <div class="play-info d-none">
+      <p id="userCont" class="poppins-medium">You : <span id="user"></span></p>
+      |
+      <p id="oppCont" class="poppins-medium">
+        Opponent : <span id="opp"></span>
+      </p>
+    </div>
+
+    <div class="turnText d-none">
+      <p id="valueCont" class="poppins-medium">
+        You are playing as <span id="Turnvalue"></span>
+      </p>
+
+      <p id="whosTurn" class="poppins-semibold">X's Turn</p>
+    </div>
+
+    <form id="joinGame">
+      <label for="userNameInput" class="poppins-medium"
+        >Enter your name :</label
+      >
+      <input
+        type="text"
+        name="name"
+        id="userNameInput"
+        autocomplete="off"
+        required
+      />
+      <button type="submit">Join Game</button>
+    </form>
+
+    <br />
+    <div class="loading-container d-none">
+      <i id="loader" class="fa-solid fa-spinner fa-spin-pulse"></i>
+      <p id="searching">Searching for a player..</p>
+    </div>
+
+    <!-- The grid board -->
+    <div class="grid-board d-none">
+      <button class="turn" id="box-1"></button>
+      <button class="turn" id="box-2"></button>
+      <button class="turn" id="box-3"></button>
+      <button class="turn" id="box-4"></button>
+      <button class="turn" id="box-5"></button>
+      <button class="turn" id="box-6"></button>
+      <button class="turn" id="box-7"></button>
+      <button class="turn" id="box-8"></button>
+      <button class="turn" id="box-9"></button>
+    </div>
+
+    <!-- JS File -->
+    <script src="./scripts.js"></script>
+  </body>
+</html>
