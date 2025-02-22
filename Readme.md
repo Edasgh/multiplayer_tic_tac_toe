@@ -58,7 +58,7 @@ This file handles the client-side logic and interaction:
 #### Key functions and logic:
 
 - **Event Listeners**: Sets up event listeners for form submission and grid button clicks.
-- **Socket Events**: Listens for events from the server (`find`, `playing`, `gameOver`) and updates the UI accordingly.
+- **Socket Events**: Listens for events from the server (`join_room`, `playing`, `gameOver`) and updates the UI accordingly.
 - **Game Logic**: Implements the game logic, including checking for wins, handling turns, and updating the game state.
 
 ### Brief Flow of the Program
@@ -66,12 +66,12 @@ This file handles the client-side logic and interaction:
 1. **User Joins the Game**:
 
    - User enters their name and submits the form.
-   - Client emits a `find` event with the user's name.
+   - Client emits a `join_room` event with the user's name.
    - Server adds the user to the waiting list and matches them with another player if available.
 
 2. **Game Starts**:
 
-   - When two players are matched, the server emits a `find` event with game info (players, turns, etc.) to both clients.
+   - When two players are matched, the server emits a `join_room` event with game info (players, turns, etc.) to both clients.
    - Clients update their UI to show the game board and player info.
 
 3. **Playing the Game**:
