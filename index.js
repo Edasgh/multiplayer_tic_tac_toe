@@ -1,101 +1,100 @@
+const { v4: uuidv4 } = require("uuid");
 const express = require("express");
-const app = express();
-
-const path = require("path");
 const http = require("http");
 const { Server } = require("socket.io");
-
 const dotenv = require("dotenv");
+const path = require("path");
+
 dotenv.config();
 
+const app = express();
 const port = process.env.PORT || 5000;
-
-//creating a server in http
 const server = http.createServer(app);
 const io = new Server(server);
-app.use(express.static(path.resolve(""))); // so we can use the html file
 
-//to generate which turn to be played first
-const values = ["X", "O"];
-let randmIdx = Math.floor(Math.random() * 2);
-let generatedVal = values[randmIdx];
+app.use(express.static(path.resolve(""))); // Serve static files
 
-let arr = [];
-let playingArr = [];
+let playingArr = []; // Active game rooms
 
 io.on("connection", (socket) => {
-  //on is used to get the data sent via "emit" function
-  socket.on("find", (e) => {
-    if (e.name !== null) {
-      arr.push(e.name);
+  console.log(`User connected: ${socket.id}`);
 
-      if (arr.length >= 2) {
-        let p1obj = {
-          p1Name: arr[0],
-          p1Turn: generatedVal,
-          p1Moves: [],
-        };
+  socket.on("join_room", (data) => {
+    if (!data.name) return;
 
-        let p2Trn = p1obj.p1Turn === "X" ? "O" : "X";
+    let availableRoom = playingArr.find((room) => !room.player2);
 
-        let p2obj = {
-          p2Name: arr[1],
-          p2Turn: p2Trn,
-          p2Moves: [],
-        };
+    if (availableRoom) {
+      availableRoom.player2 = {
+        socketId: socket.id,
+        name: data.name,
+        turn: availableRoom.player1.turn === "X" ? "O" : "X",
+        moves: [],
+      };
+      socket.join(availableRoom.id);
+      io.to(availableRoom.id).emit("join_room", availableRoom);
+    } else {
+      const newRoomId = uuidv4();
+      const generatedVal = Math.floor(Math.random() * 2) === 0 ? "X" : "O";
 
-        let obj = {
-          p1: p1obj,
-          p2: p2obj,
-          choiceCount: 0,
-        };
+      let newRoom = {
+        id: newRoomId,
+        player1: {
+          socketId: socket.id,
+          name: data.name,
+          turn: generatedVal,
+          moves: [],
+        },
+        player2: null,
+        choiceCount: 0,
+      };
 
-        playingArr.push(obj);
-
-        arr.splice(0, 2);
-
-        io.emit("find", { allPlayers: playingArr });
-      }
+      socket.join(newRoomId);
+      playingArr.push(newRoom);
+      socket.emit("waiting", { message: "Waiting for an opponent..." });
     }
   });
 
   socket.on("playing", (e) => {
-    let p1MovesSet, p2MovesSet;
-    let currentPlayObj = playingArr.find(
-      (obj) => obj.p1.p1Name === e.name || obj.p2.p2Name === e.name
+    let currentGame = playingArr.find((room) =>
+      [room.player1?.name, room.player2?.name].includes(e.name)
     );
 
-    if (currentPlayObj.p1.p1Turn === e.value) {
-      if (currentPlayObj.p2.p2Moves.includes(e.id)) {
-        return;
-      } else {
-        currentPlayObj.p1.p1Moves.push(e.id);
-        p1MovesSet = new Set([...currentPlayObj.p1.p1Moves]);
-        currentPlayObj.p1.p1Moves = [...p1MovesSet];
-      }
-      if (currentPlayObj.choiceCount < 9) {
-        currentPlayObj.choiceCount++;
+    if (!currentGame) return;
+
+    let currentPlayer =
+      currentGame.player1.name === e.name
+        ? currentGame.player1
+        : currentGame.player2;
+    let opponent =
+      currentGame.player1.name !== e.name
+        ? currentGame.player1
+        : currentGame.player2;
+
+    if (currentGame.choiceCount < 9) {
+      if (
+        !opponent.moves.includes(e.id) &&
+        !currentPlayer.moves.includes(e.id)
+      ) {
+        currentPlayer.moves.push(e.id);
+        currentGame.choiceCount++;
+        io.to(currentGame.id).emit("playing", currentGame);
       }
     }
-
-    if (currentPlayObj.p2.p2Turn === e.value) {
-      if (currentPlayObj.p1.p1Moves.includes(e.id)) {
-        return;
-      } else {
-        currentPlayObj.p2.p2Moves.push(e.id);
-        p2MovesSet = new Set([...currentPlayObj.p2.p2Moves]);
-        currentPlayObj.p2.p2Moves = [...p2MovesSet];
-      }
-      if (currentPlayObj.choiceCount < 9) {
-        currentPlayObj.choiceCount++;
-      }
-    }
-
-    io.emit("playing", { allPlayers: playingArr });
   });
 
-  socket.on("gameOver", (e) => {
-    playingArr = playingArr.filter((obj) => obj.p1.p1Name !== e.name);
+  socket.on("gameOver", (data) => {
+    playingArr = playingArr.filter((room) => room.id !== data.roomId);
+    io.to(data.roomId).emit("gameOver", { message: "Game over!" });
+  });
+
+  socket.on("disconnect", () => {
+    playingArr = playingArr.filter(
+      (room) =>
+        room.player1?.socketId !== socket.id &&
+        room.player2?.socketId !== socket.id
+    );
+    console.log(`User disconnected: ${socket.id}`);
   });
 });
 
@@ -104,12 +103,9 @@ app.get("/", (req, res) => {
 });
 
 server.listen(port, () => {
-  if(process.env.NODE_ENV==="development")
-  {
+  if (process.env.NODE_ENV === "development") {
     console.log(`Server running on port ${port}`);
-  }
-  else
-  {
+  } else {
     console.log(`Tic Tac Toe server is running`);
   }
 });

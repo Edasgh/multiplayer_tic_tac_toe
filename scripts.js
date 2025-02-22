@@ -90,35 +90,31 @@ joinGameForm.addEventListener("submit", (e) => {
   e.preventDefault();
 
   userName = userNameInput.value;
-  socket.emit("find", { name: userName }); //emit is used to send a data (to be got via socket.on() function)
+  socket.emit("join_room", { name: userName }); //emit is used to send a data (to be got via socket.on() function)
   joinGameForm.querySelector("button").disabled = "true";
 
   loadingContainer.classList.remove("d-none");
 });
 
-socket.on("find", (e) => {
-  let allPlayersArr = e.allPlayers;
-
+socket.on("join_room", (e) => {
   joinGameForm.style.display = "none";
   loadingContainer.classList.add("d-none");
   playInfoContainer.classList.remove("d-none");
   turnTextContainer.classList.remove("d-none");
   gridContainer.classList.remove("d-none");
 
-  const foundObj = allPlayersArr.find(
-    (obj) => obj.p1.p1Name == `${userName}` || obj.p2.p2Name == `${userName}`
-  );
-  foundObj.p1.p1Name == `${userName}`
-    ? (oppName = foundObj.p2.p2Name)
-    : (oppName = foundObj.p1.p1Name);
-  foundObj.p1.p1Name == `${userName}`
-    ? (yourTurn = foundObj.p1.p1Turn)
-    : (yourTurn = foundObj.p2.p2Turn);
+  const foundObj = e;
+  foundObj.player1.name == `${userName}`
+    ? (oppName = foundObj.player2.name)
+    : (oppName = foundObj.player1.name);
+  foundObj.player1.name == `${userName}`
+    ? (yourTurn = foundObj.player1.turn)
+    : (yourTurn = foundObj.player2.turn);
 
   user.innerText = `${userName}`;
   opp.innerText = `${oppName}`;
 
-  whosTurnNow = foundObj.p1.p1Turn;
+  whosTurnNow = foundObj.player1.turn;
   document.getElementById("whosTurn").innerText = `${whosTurnNow}'s Turn`;
   turnText.innerText = `${yourTurn}`;
 });
@@ -144,21 +140,19 @@ grid_boxes.forEach((box) => {
 });
 
 socket.on("playing", (e) => {
-  const foundObj = e.allPlayers.find(
-    (obj) => obj.p1.p1Name == `${userName}` || obj.p2.p2Name == `${userName}`
-  );
+  const foundObj = e;
 
-  let p1Name = foundObj.p1.p1Name;
-  let p2Name = foundObj.p2.p2Name;
+  let p1Name = foundObj.player1.name;
+  let p2Name = foundObj.player2.name;
 
-  let p1Moves = foundObj.p1.p1Moves;
-  let p2Moves = foundObj.p2.p2Moves;
+  let p1Moves = foundObj.player1.moves;
+  let p2Moves = foundObj.player2.moves;
 
   if (foundObj.choiceCount % 2 != 0) {
-    whosTurnNow = foundObj.p2.p2Turn;
+    whosTurnNow = foundObj.player2.turn;
     document.getElementById("whosTurn").innerText = `${whosTurnNow}'s Turn`;
   } else {
-    whosTurnNow = foundObj.p1.p1Turn;
+    whosTurnNow = foundObj.player1.turn;
     document.getElementById("whosTurn").innerText = `${whosTurnNow}'s Turn`;
   }
 
@@ -174,7 +168,7 @@ socket.on("playing", (e) => {
         ).innerText = `Redirecting To Home Page In ${3 - time} second(s)`;
       }, 1000);
       setTimeout(() => {
-        socket.emit("gameOver", { name: userName });
+        socket.emit("gameOver", { name: userName , roomId:e.id });
         clearInterval(interval);
         window.location.reload();
       }, 3000);
@@ -186,7 +180,7 @@ socket.on("playing", (e) => {
       p1Moves.forEach((p1Move) => {
         let p1MoveBox = document.getElementById(`${p1Move}`);
 
-        p1MoveBox.innerText = `${foundObj.p1.p1Turn}`;
+        p1MoveBox.innerText = `${foundObj.player1.turn}`;
         p1MoveBox.setAttribute("disabled", true);
 
         //check at every step if somebody wins
@@ -201,7 +195,7 @@ socket.on("playing", (e) => {
       p2Moves.forEach((p2Move) => {
         let p2MoveBox = document.getElementById(`${p2Move}`);
 
-        p2MoveBox.innerText = `${foundObj.p2.p2Turn}`;
+        p2MoveBox.innerText = `${foundObj.player2.turn}`;
         p2MoveBox.setAttribute("disabled", true);
 
         //check at every step if somebody wins
